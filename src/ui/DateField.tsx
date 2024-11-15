@@ -1,48 +1,44 @@
 import { Input } from "../components/atoms/Input";
-import { displayDate } from "../utils/date";
-import dayjs from "dayjs";
 import { useQueryState } from "../hooks/useQueryState";
 import { useEffect } from "react";
+import dayjs from "dayjs";
 
-const today = displayDate();
+const today = dayjs().format("YYYY-MM-DD");
 
 export const Departure = () => {
-  const [date, setDate] = useQueryState("departure", today);
-  const [returnDate, setReturnDate] = useQueryState("return", today);
-
-  useEffect(() => {
-    if (returnDate < date) setReturnDate(date);
-  }, [returnDate, date, setReturnDate]);
+  const [departureDate, setDepartureDate] = useQueryState("departure", today);
 
   return (
     <Input
       type="date"
       label="Departure"
       name="departure"
-      value={date}
+      value={departureDate}
       min={today}
-      onChange={(e) => setDate(e.target.value)}
+      onChange={(e) => setDepartureDate(e.target.value)}
     />
   );
 };
 
 export const Return = () => {
   const [way] = useQueryState("way", "one-way");
-  const [departure] = useQueryState("departure", today);
-  const [date, setDate] = useQueryState(
-    "return",
-    displayDate(dayjs(departure || undefined))
-  );
+  const [departureDate] = useQueryState("departure", today);
+  const [returnDate, setReturnDate] = useQueryState("return", departureDate);
+
+  // keep return date from being past departure date
+  useEffect(() => {
+    if (returnDate < departureDate) setReturnDate(departureDate);
+  }, [returnDate, departureDate, setReturnDate]);
 
   return (
     <Input
       type="date"
       label="Return"
       name="return"
-      value={date}
+      value={returnDate}
       disabled={way === "one-way"}
-      min={departure || today}
-      onChange={(e) => setDate(e.target.value)}
+      min={departureDate || today}
+      onChange={(e) => setReturnDate(e.target.value)}
     />
   );
 };

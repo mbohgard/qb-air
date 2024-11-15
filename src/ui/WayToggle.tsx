@@ -2,7 +2,7 @@ import { Toggle } from "../components/molecules/Toggle";
 import { useQueryState } from "../hooks/useQueryState";
 
 export const WayToggle = () => {
-  const [way, setWay] = useQueryState<"one-way" | "two-way">("way", "one-way");
+  const [way, setWay] = useQueryState("way", "one-way");
 
   return (
     <Toggle

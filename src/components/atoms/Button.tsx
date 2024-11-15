@@ -43,9 +43,9 @@ export const Button: FC<PropsWithChildren<Props>> = ({
       {...props}
       className={cn(
         "px-4 py-2 font-bold text-white",
+        variant === "secondary" && "text-xs uppercase",
         _flavour,
         _rounded,
-        variant === "secondary" && "text-xs uppercase",
         _mode,
         "disabled:opacity-70 disabled:cursor-not-allowed",
         props.className

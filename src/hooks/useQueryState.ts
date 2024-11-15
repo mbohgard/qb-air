@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type Stringable = string | number | boolean | object;
+type Stringable = string | number | boolean;
 
 type GetParam = {
   (): URLSearchParams;
@@ -22,18 +22,23 @@ export const getParam: GetParam = (key?: string) => {
   }
 };
 
+// make TS infer "string" instead of "a" for ex
+type Widen<T> = T extends string ? string : T;
+
+type ParamChangeData<T> = {
+  key: string;
+  value: T;
+  params: URLSearchParams;
+} | null;
+
 // keep search param in sync with React state
 export const useQueryState = <T extends Stringable>(
   key: string,
   initalValue: T
 ) => {
+  // save initial valie in ref to avoid re-registering listeners when having initialValie in dep arrays
   const initialValueRef = useRef(initalValue);
   const [value, setValue] = useState<T>(() => getParam<T>(key) ?? initalValue);
-
-  // put initial value in ref to avoid re-registering listeners
-  useEffect(() => {
-    initialValueRef.current = initalValue;
-  }, [initalValue]);
 
   const setValueFromParam = useCallback((key: string) => {
     const param = getParam<T>(key);
@@ -46,12 +51,14 @@ export const useQueryState = <T extends Stringable>(
   const dispatch = (newValue: T) => {
     if (newValue === value) return;
 
-    const params = getParam();
-    params.set(key, newValue.toString());
+    const newParams = getParam();
+    newParams.set(key, newValue.toString());
 
+    // there is no "onstatechange" or similar event to listen for search param changes
+    // so we'll dispatch a custom event to trigger a react state sync
     window.dispatchEvent(
-      new CustomEvent("paramchange", {
-        detail: { key, value: newValue, params },
+      new CustomEvent<ParamChangeData<T>>("paramchange", {
+        detail: { key, value: newValue, params: newParams },
       })
     );
   };
@@ -74,13 +81,13 @@ export const useQueryState = <T extends Stringable>(
 
   // handle custom paramchange event
   useEffect(() => {
-    const listener = ((
-      e: CustomEvent<{ key: string; value: T; params: URLSearchParams } | null>
-    ) => {
+    const listener = ((e: CustomEvent<ParamChangeData<T>>) => {
       if (e.detail && e.detail.key !== key) return;
 
+      // set new value for param key or fallback to initial value
       setValue(e.detail?.value ?? initialValueRef.current);
 
+      // set new search params
       history.pushState(null, "", `?${e.detail?.params.toString() ?? ""}`);
     }) as EventListenerOrEventListenerObject;
 
@@ -91,7 +98,7 @@ export const useQueryState = <T extends Stringable>(
     };
   }, [key, setValue]);
 
-  return [value, dispatch] as const;
+  return [value as Widen<T>, dispatch as (val: Widen<T>) => void] as const;
 };
 
 export const clearParams = () => {

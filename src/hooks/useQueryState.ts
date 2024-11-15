@@ -22,6 +22,9 @@ export const getParam: GetParam = (key?: string) => {
   }
 };
 
+const validate = <T extends Stringable>(value: T, pattern?: string) =>
+  pattern ? new RegExp(pattern).test(value.toString()) : true;
+
 // make TS infer "string" instead of "a" for ex
 type Widen<T> = T extends string ? string : T;
 
@@ -34,19 +37,29 @@ type ParamChangeData<T> = {
 // keep search param in sync with React state
 export const useQueryState = <T extends Stringable>(
   key: string,
-  initalValue: T
+  initalValue: T,
+  options?: {
+    pattern?: string;
+  }
 ) => {
-  // save initial valie in ref to avoid re-registering listeners when having initialValie in dep arrays
+  // save initial value in ref to avoid re-registering listeners when having initialValie in dep arrays
   const initialValueRef = useRef(initalValue);
-  const [value, setValue] = useState<T>(() => getParam<T>(key) ?? initalValue);
+  const [value, setValue] = useState<T>(() => {
+    const param = getParam<T>(key) ?? initalValue;
 
-  const setValueFromParam = useCallback((key: string) => {
-    const param = getParam<T>(key);
+    return validate(param, options?.pattern) ? param : initalValue;
+  });
 
-    if (param) {
-      setValue(param);
-    }
-  }, []);
+  const setValueFromParam = useCallback(
+    (key: string) => {
+      const param = getParam<T>(key);
+
+      if (param && validate(param, options?.pattern)) {
+        setValue(param);
+      }
+    },
+    [options?.pattern]
+  );
 
   const dispatch = (newValue: T) => {
     if (newValue === value) return;

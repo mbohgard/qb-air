@@ -1,12 +1,10 @@
 import { Input } from "../components/atoms/Input";
+import { useDateState } from "../hooks/useDateState";
 import { useQueryState } from "../hooks/useQueryState";
 import { useEffect } from "react";
-import dayjs from "dayjs";
-
-const today = dayjs().format("YYYY-MM-DD");
 
 export const Departure = () => {
-  const [departureDate, setDepartureDate] = useQueryState("departure", today);
+  const [departureDate, setDepartureDate, today] = useDateState("departure");
 
   return (
     <Input
@@ -22,8 +20,11 @@ export const Departure = () => {
 
 export const Return = () => {
   const [way] = useQueryState("way", "one-way");
-  const [departureDate] = useQueryState("departure", today);
-  const [returnDate, setReturnDate] = useQueryState("return", departureDate);
+  const [departureDate] = useDateState("departure");
+  const [returnDate, setReturnDate, today] = useDateState(
+    "return",
+    departureDate
+  );
 
   // keep return date from being past departure date
   useEffect(() => {

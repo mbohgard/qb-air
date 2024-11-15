@@ -1,7 +1,7 @@
 import { Input } from "../components/atoms/Input";
 import { useDateState } from "../hooks/useDateState";
-import { useQueryState } from "../hooks/useQueryState";
 import { useEffect } from "react";
+import { useWayState } from "../hooks/useWayState";
 
 export const Departure = () => {
   const [departureDate, setDepartureDate, today] = useDateState("departure");
@@ -19,7 +19,7 @@ export const Departure = () => {
 };
 
 export const Return = () => {
-  const [way] = useQueryState("way", "one-way");
+  const [way] = useWayState("way");
   const [departureDate] = useDateState("departure");
   const [returnDate, setReturnDate, today] = useDateState(
     "return",

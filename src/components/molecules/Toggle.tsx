@@ -15,7 +15,7 @@ export const Toggle: FC<Props> = ({ a, b, onToggle, selected }) => {
         role="radio"
         rounded="left"
         variant="secondary"
-        pressed={selected === "a"}
+        mode={selected === "a" ? "highlighted" : "dimmed"}
         onClick={() => onToggle?.("a")}
       >
         {a}
@@ -24,7 +24,7 @@ export const Toggle: FC<Props> = ({ a, b, onToggle, selected }) => {
         role="radio"
         rounded="right"
         variant="secondary"
-        pressed={selected === "b"}
+        mode={selected === "b" ? "highlighted" : "dimmed"}
         onClick={() => onToggle?.("b")}
       >
         {b}

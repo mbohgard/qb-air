@@ -4,8 +4,6 @@ import { useQueryState } from "../hooks/useQueryState";
 export const WayToggle = () => {
   const [way, setWay] = useQueryState<"one-way" | "two-way">("way", "one-way");
 
-  console.log(performance.now(), way);
-
   return (
     <Toggle
       a="One-way"

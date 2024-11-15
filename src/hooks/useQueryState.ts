@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Stringable = string | number | boolean | object;
 
@@ -27,7 +27,13 @@ export const useQueryState = <T extends Stringable>(
   key: string,
   initalValue: T
 ) => {
+  const initialValueRef = useRef(initalValue);
   const [value, setValue] = useState<T>(() => getParam<T>(key) ?? initalValue);
+
+  // put initial value in ref to avoid re-registering listeners
+  useEffect(() => {
+    initialValueRef.current = initalValue;
+  }, [initalValue]);
 
   const setValueFromParam = useCallback((key: string) => {
     const param = getParam<T>(key);
@@ -69,12 +75,13 @@ export const useQueryState = <T extends Stringable>(
   // handle custom paramchange event
   useEffect(() => {
     const listener = ((
-      e: CustomEvent<{ key: string; value: T; params: URLSearchParams }>
+      e: CustomEvent<{ key: string; value: T; params: URLSearchParams } | null>
     ) => {
-      if (e.detail.key !== key) return;
+      if (e.detail && e.detail.key !== key) return;
 
-      setValue(e.detail.value);
-      history.pushState(null, "", `?${e.detail.params.toString()}`);
+      setValue(e.detail?.value ?? initialValueRef.current);
+
+      history.pushState(null, "", `?${e.detail?.params.toString() ?? ""}`);
     }) as EventListenerOrEventListenerObject;
 
     window.addEventListener("paramchange", listener);
@@ -85,4 +92,8 @@ export const useQueryState = <T extends Stringable>(
   }, [key, setValue]);
 
   return [value, dispatch] as const;
+};
+
+export const clearParams = () => {
+  window.dispatchEvent(new CustomEvent("paramchange"));
 };
